@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     BlogPost[]
+}
+
+model Channel {
+  id               Int      @id @default(autoincrement())
+  youtubeChannelId String   @unique
+  name             String
+  customUrl        String?
+  thumbnailUrl     String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  videos           Video[]
+}
+
+model Video {
+  id             Int      @id @default(autoincrement())
+  youtubeVideoId String   @unique
+  title          String
+  description    String?  @db.Text
+  publishedAt    DateTime
+  thumbnailUrl   String
+  channelId      Int
+  channel        Channel  @relation(fields: [channelId], references: [id])
+  isBchRelated   Boolean  @default(false)
+  isFeatured     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model BlogPost {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  content     String   @db.Text
+  authorId    Int
+  author      User     @relation(fields: [authorId], references: [id])
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FeaturedContent {
+  id          Int      @id @default(autoincrement())
+  videoId     Int?     @unique
+  blogPostId  Int?     @unique
+  video       Video?   @relation(fields: [videoId], references: [id])
+  blogPost    BlogPost?@relation(fields: [blogPostId], references: [id])
+  order       Int
+  createdAt   DateTime @default(now())
+
+  @@unique([videoId, blogPostId])
+}
